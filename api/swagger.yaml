@@ -1,0 +1,232 @@
+openapi: 3.0.0
+info:
+  title: Money Tracker API
+  description: This is a money tracker api
+  contact:
+    email: kawakawaryuryu@hotmail.co.jp
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+- url: https://virtserver.swaggerhub.com/kawakawaryuryu/money-tracker-api/1.0.0
+  description: money tracker api server
+paths:
+  /v1/expenses:
+    get:
+      summary: gets expenses
+      description: 支出一覧を取得する
+      operationId: getExpenses
+      parameters:
+      - name: beginDate
+        in: query
+        description: 開始日
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date
+          example: 2019-10-01
+      - name: endDate
+        in: query
+        description: 終了日
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date
+          example: 2019-10-31
+      responses:
+        200:
+          description: get succesfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpensesResponse'
+      x-swagger-router-controller: Default
+    post:
+      summary: adds a expense
+      description: 支出を登録する
+      operationId: addExpense
+      requestBody:
+        description: expense object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpenseRequest'
+      responses:
+        201:
+          description: registered successfully
+          headers:
+            Location:
+              description: created expense url
+              style: simple
+              explode: false
+              schema:
+                type: string
+                format: url
+        400:
+          description: invalid input
+      x-swagger-router-controller: Default
+  /v1/expenses/{expenseId}:
+    get:
+      summary: gets a expense
+      description: |
+        支出詳細を取得する
+      operationId: getExpense
+      parameters:
+      - name: expenseId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: get successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpenseResponse'
+        404:
+          description: not found expenseId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+      x-swagger-router-controller: Default
+  /v1/results/{resultId}:
+    get:
+      summary: gets Result
+      description: |
+        その月の収支結果を取得する
+      operationId: getResult
+      parameters:
+      - name: resultId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+        example: 2019-10
+      responses:
+        200:
+          description: get successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultResponse'
+        404:
+          description: not found resultId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+      x-swagger-router-controller: Default
+components:
+  schemas:
+    NotFound:
+      type: object
+      properties:
+        code:
+          type: string
+          description: エラーコード
+          example: "404"
+        message:
+          type: string
+          description: エラーメッセージ
+          example: 指定されたIDは存在しません
+    ExpensesResponse:
+      type: object
+      properties:
+        expenses:
+          type: array
+          description: 支出一覧リスト
+          items:
+            $ref: '#/components/schemas/ExpenseResponse'
+      example:
+        expenses:
+        - date: 2019-10-22T00:00:00.000+0000
+          amount: 100
+          id: d290f1ee-6c54-4b01-90e6-d701748f0851
+          content: おにぎり
+        - date: 2019-10-22T00:00:00.000+0000
+          amount: 100
+          id: d290f1ee-6c54-4b01-90e6-d701748f0851
+          content: おにぎり
+    ExpenseResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 支出ID
+          example: d290f1ee-6c54-4b01-90e6-d701748f0851
+        amount:
+          minimum: 0
+          type: integer
+          description: 支出額
+          example: 100
+        date:
+          type: string
+          description: 支出日付
+          format: date
+          example: 2019-10-22
+        content:
+          type: string
+          description: 支出内容
+          example: おにぎり
+      example:
+        date: 2019-10-22T00:00:00.000+0000
+        amount: 100
+        id: d290f1ee-6c54-4b01-90e6-d701748f0851
+        content: おにぎり
+    ExpenseRequest:
+      required:
+      - amount
+      - content
+      - date
+      type: object
+      properties:
+        amount:
+          minimum: 0
+          type: integer
+          description: 支出額
+          example: 100
+        date:
+          type: string
+          description: 支出日付
+          format: date
+          example: 2019-10-22
+        content:
+          type: string
+          description: 支出内容
+          example: おにぎり
+    ResultResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 該当月（yyyy-MM）
+          format: date
+        totalExpense:
+          minimum: 0
+          type: integer
+          description: その月の支出合計
+          example: 10000
+        expenseGoal:
+          type: integer
+          description: その月の支出目標
+          example: 5000
+        balance:
+          type: integer
+          description: その月の差額
+          example: -5000
+      example:
+        expenseGoal: 5000
+        balance: -5000
+        id: 2000-01-23
+        totalExpense: 10000
